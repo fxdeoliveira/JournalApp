@@ -1,78 +1,111 @@
-import { Button, Grid, Link, TextField, Typography } from "@mui/material";
+import {
+  Alert,
+  Button,
+  Grid,
+  Link,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { AuthLayout } from "../layout/AuthLayout";
 import { useForm } from "../../hooks";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { startCredentialsUser } from "../../store/auth/thunks";
 
 export const RegisterPage = () => {
+  const dispatch = useDispatch();
 
-  const [formSubmitted, setFormSubmitted] = useState(false)
+  const [formSubmitted, setFormSubmitted] = useState(false);
+
+  const { status, errorMessage } = useSelector((state) => state.auth);
+  const isCheckingAuth = useMemo(() => status == "checking", [status]);
 
   const formData = {
-    email: 'Fabio@GAMIL.COM',
-    password: '1234',
-    displayName: 'Fabo',
-  }
+    email: "Fabio@GAMIL.COM",
+    password: "1234",
+    displayName: "Fabo",
+  };
 
   const formValidations = {
-    displayName: [(value) => value.length >= 2  , 'Name'],
-    email: [(value) => value.includes('@') , 'Email'],
-    password: [(value) => value.length >= 6  , 'Password'],
-  }
-  const { formState, displayName, displayNameValid, email, emailValid, password, passwordValid, onInputChange, isFormValid } = useForm(formData, formValidations);
-
+    displayName: [(value) => value.length >= 2, "Name"],
+    email: [(value) => value.includes("@"), "Email"],
+    password: [(value) => value.length >= 6, "Password"],
+  };
+  const {
+    formState,
+    displayName,
+    displayNameValid,
+    email,
+    emailValid,
+    password,
+    passwordValid,
+    onInputChange,
+    isFormValid,
+  } = useForm(formData, formValidations);
 
   const onSubmit = (event) => {
     event.preventDefault();
     setFormSubmitted(true);
+    if (!isFormValid) return;
+    dispatch(startCredentialsUser(formState));
   };
-
-
 
   return (
     <AuthLayout title="Register">
-      <form onSubmit={onSubmit}>
+      <form
+        className="animate__animated animate__fadeIn animate__faster"
+        onSubmit={onSubmit}
+      >
         <Grid container>
           <Grid item xs={12} sx={{ mt: 2 }}>
             <TextField
-              label='Name'
+              label="Name"
               value={displayName}
               name="displayName"
-              onChange={ onInputChange }
+              onChange={onInputChange}
               type="text"
               placeholder="Name"
               fullWidth
               error={!!displayNameValid && formSubmitted}
-              helperText= {displayNameValid}
+              helperText={displayNameValid}
             />
             <TextField
               label="Email"
               value={email}
               name="email"
-              onChange={ onInputChange }
+              onChange={onInputChange}
               type="text"
               placeholder="email@example.com"
               fullWidth
               error={!!emailValid && formSubmitted}
-              helperText= {emailValid}
+              helperText={emailValid}
               sx={{ mt: 2 }}
             />
             <TextField
               label="Password"
               value={password}
               name="password"
-              onChange={ onInputChange }
+              onChange={onInputChange}
               type="password"
               placeholder="password"
               fullWidth
               error={!!passwordValid && formSubmitted}
-              helperText= {passwordValid}
+              helperText={passwordValid}
               sx={{ mt: 2 }}
             />
           </Grid>
           <Grid container spacing={2} sx={{ mb: 2, mt: 1 }}>
+            <Grid display={!!errorMessage ? "" : "none"} item xs={12}>
+              <Alert severity="error">{errorMessage}</Alert>
+            </Grid>
             <Grid item xs={12}>
-              <Button type="submit" variant="contained" fullWidth>
+              <Button
+                disabled={isCheckingAuth}
+                type="submit"
+                variant="contained"
+                fullWidth
+              >
                 New account
               </Button>
             </Grid>
